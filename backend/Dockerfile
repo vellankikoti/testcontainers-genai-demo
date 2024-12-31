@@ -15,8 +15,8 @@ RUN pip install -r requirements.txt
 # Copy application code
 COPY . ./
 
-# Set executable permission for wait-for-it.sh within the Docker container
+# Set permissions explicitly for wait-for-it.sh inside the container
 RUN chmod +x /app/wait-for-it.sh
 
 # Use wait-for-it.sh to delay backend startup until the database is ready
-CMD ["/bin/sh", "-c", "/app/wait-for-it.sh postgres-db -- python app.py"]
+CMD ["sh", "-c", "/app/wait-for-it.sh postgres-db -- python app.py"]
