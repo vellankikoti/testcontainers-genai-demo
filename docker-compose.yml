@@ -21,15 +21,22 @@ services:
     ports:
       - "5000:5000"
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      DATABASE_URL: postgresql://testuser:testpass@db:5432/testdb
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_URL=postgresql://testuser:testpass@postgres-db:5432/testdb
     depends_on:
       db:
         condition: service_healthy
-    command: ["./wait-for-it.sh", "db", "--", "python", "app.py"]
+    command: ["./wait-for-it.sh", "postgres-db", "--", "python", "app.py"]
+    volumes:
+      - ./backend:/app
 
   frontend:
     build: ./frontend
     container_name: frontend
     ports:
       - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - ./frontend:/app

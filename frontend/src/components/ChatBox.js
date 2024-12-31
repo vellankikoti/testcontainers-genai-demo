@@ -2,44 +2,39 @@ import React, { useState } from "react";
 import MessageList from "./MessageList";
 
 function ChatBox() {
-  const [message, setMessage] = useState("");
+  const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
 
-  const handleSendMessage = async () => {
-    if (!message.trim()) return;
-
-    const userMessage = { message };
-
-    try {
-      const response = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userMessage),
-      });
-
-      const data = await response.json();
-
-      setMessages([...messages, { user: message, response: data.responses.Normal }]);
-      setMessage("");
-    } catch (error) {
-      console.error("Error sending message:", error);
+  const sendMessage = async (role) => {
+    if (!question.trim()) return;
+    const response = await fetch("http://localhost:5000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: question, role }),
+    });
+    const data = await response.json();
+    if (data.response) {
+      setMessages([...messages, { user: question, role, response: data.response }]);
     }
+    setQuestion("");
   };
 
   return (
-    <div style={{ margin: "20px" }}>
+    <div className="chat-box">
       <MessageList messages={messages} />
-      <div>
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your message..."
-          style={{ width: "80%", padding: "10px", fontSize: "16px" }}
-        />
-        <button onClick={handleSendMessage} style={{ padding: "10px 20px", marginLeft: "10px" }}>
-          Send
-        </button>
+      <input
+        type="text"
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        placeholder="What's your question?"
+        className="chat-input"
+      />
+      <div className="button-group">
+        {["Manager", "Developer", "QA", "DevOps", "Funny"].map((role) => (
+          <button key={role} onClick={() => sendMessage(role)}>
+            {role}
+          </button>
+        ))}
       </div>
     </div>
   );

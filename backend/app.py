@@ -1,59 +1,84 @@
 import os
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+import openai
+from dotenv import load_dotenv
 
-# Initialize Flask app
+# Load environment variables
+load_dotenv()
+
 app = Flask(__name__)
+CORS(app)
 
-# Load database URL from environment variables
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://testuser:testpass@db:5432/testdb')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Initialize SQLAlchemy
+# Database configuration
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL", "postgresql://testuser:testpass@db:5432/testdb"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-# Define the ChatHistory model
+# OpenAI API Key
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Database model for chat history
 class ChatHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_message = db.Column(db.Text, nullable=False)
-    ai_responses = db.Column(db.JSON, nullable=False)
+    ai_response = db.Column(db.Text, nullable=False)
+    role = db.Column(db.String(50), nullable=False)
 
 # Ensure tables are created
 @app.before_first_request
 def create_tables():
-    try:
-        db.create_all()
-        print("Database tables created successfully!")
-    except Exception as e:
-        print(f"Error creating database tables: {str(e)}")
+    db.create_all()
 
-# Health check endpoint
-@app.route("/health", methods=["GET"])
-def health_check():
-    return jsonify({"status": "OK"})
+# Role-specific prompts
+role_prompts = {
+    "Manager": "Respond as a strategic Manager.",
+    "Developer": "Respond as a Developer with code examples.",
+    "QA": "Respond as a QA Tester with detailed test cases.",
+    "DevOps": "Respond as a DevOps Engineer with deployment advice.",
+    "Funny": "Respond humorously with jokes or sarcasm.",
+}
 
-# Test database connectivity
-@app.route("/test-db", methods=["GET"])
-def test_db():
-    try:
-        db.session.execute("SELECT 1").scalar()
-        return jsonify({"status": "Database connected successfully!"})
-    except Exception as e:
-        return jsonify({"status": "Error connecting to database", "error": str(e)}), 500
-
-# Chat endpoint
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.json
     user_message = data.get("message", "")
-    ai_responses = {"Normal": "Mock response"}  # Replace with actual AI response logic
+    role = data.get("role", "Normal")
+
+    if not user_message:
+        return jsonify({"error": "Message is required"}), 400
+
+    # Generate response from OpenAI
+    prompt = f"{role_prompts.get(role, '')}\nUser: {user_message}\nAI:"
     try:
-        chat_entry = ChatHistory(user_message=user_message, ai_responses=ai_responses)
-        db.session.add(chat_entry)
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=prompt,
+            max_tokens=150,
+        )
+        ai_response = response.choices[0].text.strip()
+
+        # Save to database
+        chat = ChatHistory(user_message=user_message, ai_response=ai_response, role=role)
+        db.session.add(chat)
         db.session.commit()
-        return jsonify({"responses": ai_responses})
+
+        return jsonify({"response": ai_response})
     except Exception as e:
-        return jsonify({"status": "Error saving to database", "error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/history", methods=["GET"])
+def get_history():
+    """Retrieve chat history."""
+    chats = ChatHistory.query.all()
+    return jsonify(
+        [{"id": chat.id, "user": chat.user_message, "ai": chat.ai_response, "role": chat.role} for chat in chats]
+    )
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
