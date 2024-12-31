@@ -1,17 +1,4 @@
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "5000:5000"
-    environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      DATABASE_URL: postgresql://testuser:testpass@db:5432/testdb
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-
   db:
     image: postgres:latest
     environment:
@@ -20,3 +7,26 @@ services:
       POSTGRES_DB: testdb
     ports:
       - "5432:5432"
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser"]
+      interval: 10s
+      retries: 5
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DATABASE_URL: postgresql://testuser:testpass@db:5432/testdb
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["./wait-for-it.sh", "db", "--", "python", "app.py"]
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
