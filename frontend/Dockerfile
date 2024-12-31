@@ -2,14 +2,14 @@ FROM node:16-alpine
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package.json package-lock.json ./
+# Copy only package.json
+COPY package.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy application code
-COPY . .
+# Copy the entire application code
+COPY . ./
 
 # Expose the development server port
 EXPOSE 3000
