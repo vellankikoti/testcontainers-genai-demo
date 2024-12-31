@@ -56,8 +56,12 @@ testcontainers-genai-demo/
 │   │   ├── init.sql
 │   ├── tests/
 │   │   ├── test_chat.py
+│   │   ├── test_database.py
+│   │   ├── test_mock_openai.py
 ├── frontend/
 │   ├── public/
+│   │   ├── index.html
+│   │   ├── favicon.ico
 │   ├── src/
 │   │   ├── App.js
 │   │   ├── components/
@@ -126,7 +130,7 @@ testcontainers-genai-demo/
     CREATE TABLE ChatHistory (
         id SERIAL PRIMARY KEY,
         user_message TEXT NOT NULL,
-        ai_response TEXT NOT NULL
+        ai_responses JSON NOT NULL
     );
     ```
 
@@ -152,12 +156,97 @@ testcontainers-genai-demo/
     ```
 
 ### 2. Write and Run Tests
-1. Navigate to the `backend/tests` folder.
-2. Run the test cases:
-    ```bash
-    $ pytest test_chat.py
-    ```
-3. Verify that all tests pass.
+
+#### **Test: Chat Endpoint Functionality**
+Tests the `/chat` endpoint to ensure it generates responses for all six characters.
+
+**File:** `backend/tests/test_chat.py`
+```python
+import pytest
+from testcontainers.postgres import PostgresContainer
+import requests
+
+def test_chat_endpoint():
+    with PostgresContainer("postgres:latest") as postgres:
+        db_url = postgres.get_connection_url()
+        response = requests.post(
+            "http://localhost:5000/chat",
+            json={"message": "Explain DevOps culture"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "Normal" in data["responses"]
+        assert "DevOps Engineer" in data["responses"]
+```
+
+#### **Test: Database Interaction**
+Tests whether data is correctly written to and retrieved from the database.
+
+**File:** `backend/tests/test_database.py`
+```python
+from testcontainers.postgres import PostgresContainer
+import sqlalchemy
+from sqlalchemy import Table, Column, Integer, Text, JSON, MetaData
+
+def test_database_interaction():
+    with PostgresContainer("postgres:latest") as postgres:
+        engine = sqlalchemy.create_engine(postgres.get_connection_url())
+        metadata = MetaData()
+
+        chat_history = Table(
+            'ChatHistory', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('user_message', Text),
+            Column('ai_responses', JSON)
+        )
+
+        metadata.create_all(engine)
+        connection = engine.connect()
+
+        # Insert data
+        insert_query = chat_history.insert().values(
+            user_message="What is Testcontainers?",
+            ai_responses={"Normal": "Testcontainers is a testing framework."}
+        )
+        connection.execute(insert_query)
+
+        # Retrieve data
+        select_query = chat_history.select()
+        result = connection.execute(select_query).fetchone()
+
+        assert result['user_message'] == "What is Testcontainers?"
+        assert result['ai_responses']["Normal"] == "Testcontainers is a testing framework."
+```
+
+#### **Test: Mock OpenAI API**
+Mocks the OpenAI API to ensure tests don’t depend on external services.
+
+**File:** `backend/tests/test_mock_openai.py`
+```python
+from unittest.mock import patch
+import requests
+
+def mock_openai_response(prompt):
+    return {"choices": [{"text": "Mock response for: " + prompt}]}
+
+def test_chat_with_mocked_openai():
+    with patch("openai.Completion.create") as mock_create:
+        mock_create.side_effect = lambda **kwargs: mock_openai_response(kwargs['prompt'])
+
+        response = requests.post(
+            "http://localhost:5000/chat",
+            json={"message": "Tell me a joke"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "Normal" in data["responses"]
+        assert "Mock response" in data["responses"]["Normal"]
+```
+
+### 3. Run All Tests
+```bash
+$ pytest backend/tests
+```
 
 ---
 
