@@ -6,53 +6,63 @@ function App() {
   const [response, setResponse] = useState("");
   const [perspective, setPerspective] = useState("");
 
-  const handleResponse = (perspective) => {
+  const handleResponse = (role) => {
     if (!question.trim()) {
       alert("Please type a question first!");
       return;
     }
 
-    // Mock responses based on perspective
+    // Mock responses based on role
     const responses = {
-      Manager: `As a Manager, I would say: "${question}" needs strategic thinking!`,
-      Developer: `As a Developer: Here’s some code for "${question}"...`,
-      QA: `As QA, I’d say: Let’s write test cases for "${question}".`,
-      DevOps: `As a DevOps Engineer: Let's deploy your "${question}" smoothly.`,
-      Funny: `Haha! "${question}" reminds me of a joke!`,
+      Manager: `As a Manager, I think "${question}" requires leadership insights!`,
+      Developer: `As a Developer: Here's some pseudocode for "${question}"...`,
+      QA: `As QA, I’d say: "${question}" needs thorough testing.`,
+      DevOps: `As a DevOps Engineer: "${question}" will be deployed seamlessly.`,
+      Funny: `Haha! "${question}" reminds me of a joke.`,
     };
 
-    setPerspective(perspective);
-    setResponse(responses[perspective] || "Hmm, I don't know!");
+    setPerspective(role);
+    setResponse(responses[role]);
   };
 
   return (
     <div className="app">
-      <div className="container">
-        <h1 className="title">What do you want to ask me?</h1>
+      <div className="chat-container">
+        <h1 className="chat-title">What's your Question?</h1>
         <input
           type="text"
-          className="question-input"
+          className="chat-input"
           placeholder="Type your question here..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
         />
-        <div className="buttons">
-          {["Manager", "Developer", "QA", "DevOps", "Funny"].map((role) => (
-            <button
-              key={role}
-              className={`role-button ${role.toLowerCase()}`}
-              onClick={() => handleResponse(role)}
-            >
-              If you're a {role}
-            </button>
-          ))}
-        </div>
         {response && (
-          <div className="response">
-            <h2>{perspective} Response:</h2>
-            <p>{response}</p>
+          <div className="chat-response">
+            <p><strong>{perspective}:</strong> {response}</p>
           </div>
         )}
+        <div className="chat-buttons">
+          <button className="chat-button manager" onClick={() => handleResponse("Manager")}>
+            Manager
+            <span className="button-label">If you're a Manager</span>
+          </button>
+          <button className="chat-button developer" onClick={() => handleResponse("Developer")}>
+            Developer
+            <span className="button-label">If you're a Developer</span>
+          </button>
+          <button className="chat-button qa" onClick={() => handleResponse("QA")}>
+            QA
+            <span className="button-label">If you're a QA (Manual / Automation)</span>
+          </button>
+          <button className="chat-button devops" onClick={() => handleResponse("DevOps")}>
+            DevOps
+            <span className="button-label">If you're a DevOps Engineer</span>
+          </button>
+          <button className="chat-button funny" onClick={() => handleResponse("Funny")}>
+            Fun!!
+            <span className="button-label">If you're funny</span>
+          </button>
+        </div>
       </div>
     </div>
   );
