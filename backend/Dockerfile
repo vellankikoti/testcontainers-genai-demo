@@ -19,4 +19,5 @@ COPY . ./
 RUN chmod +x /app/wait-for-it.sh
 
 # Use wait-for-it.sh to delay backend startup until the database is ready
-CMD ["sh", "-c", "/app/wait-for-it.sh postgres-db -- python app.py"]
+CMD ["/bin/bash", "-c", "until pg_isready -h postgres-db -p 5432; do sleep 1; done && python app.py"]
+
