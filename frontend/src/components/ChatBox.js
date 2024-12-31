@@ -1,60 +1,48 @@
 import React, { useState } from "react";
-import { sendMessage } from "../services/api";
 import MessageList from "./MessageList";
 
-const characters = ["Normal", "Manager", "Developer", "Tester", "DevOps Engineer", "Funny"];
-
-const ChatBox = () => {
+function ChatBox() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const [selectedCharacter, setSelectedCharacter] = useState("Normal");
-  const [loading, setLoading] = useState(false);
 
-  const handleSend = async () => {
+  const handleSendMessage = async () => {
     if (!message.trim()) return;
 
-    setLoading(true);
+    const userMessage = { message };
+
     try {
-      const response = await sendMessage(message);
-      const newMessage = {
-        userMessage: message,
-        responses: response.responses,
-      };
-      setMessages([...messages, newMessage]);
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userMessage),
+      });
+
+      const data = await response.json();
+
+      setMessages([...messages, { user: message, response: data.responses.Normal }]);
+      setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
-    } finally {
-      setLoading(false);
     }
-    setMessage("");
   };
 
   return (
-    <div>
+    <div style={{ margin: "20px" }}>
+      <MessageList messages={messages} />
       <div>
-        <select
-          value={selectedCharacter}
-          onChange={(e) => setSelectedCharacter(e.target.value)}
-        >
-          {characters.map((char) => (
-            <option key={char} value={char}>
-              {char}
-            </option>
-          ))}
-        </select>
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Type your message..."
+          style={{ width: "80%", padding: "10px", fontSize: "16px" }}
+        />
+        <button onClick={handleSendMessage} style={{ padding: "10px 20px", marginLeft: "10px" }}>
+          Send
+        </button>
       </div>
-      <input
-        type="text"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type your message..."
-      />
-      <button onClick={handleSend} disabled={loading}>
-        {loading ? "Sending..." : "Send"}
-      </button>
-      <MessageList messages={messages} selectedCharacter={selectedCharacter} />
     </div>
   );
-};
+}
 
 export default ChatBox;

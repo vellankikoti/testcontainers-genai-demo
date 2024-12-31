@@ -1,25 +1,16 @@
 import React from "react";
 
-const MessageList = ({ messages, selectedCharacter }) => {
+function MessageList({ messages }) {
   return (
-    <div>
-      <h2>Conversation</h2>
-      {messages.length === 0 ? (
-        <p>No messages yet. Start the conversation!</p>
-      ) : (
-        messages.map((msg, index) => (
-          <div key={index} style={{ marginBottom: "1em" }}>
-            <div>
-              <strong>You:</strong> {msg.userMessage}
-            </div>
-            <div>
-              <strong>{selectedCharacter}:</strong> {msg.responses[selectedCharacter]}
-            </div>
-          </div>
-        ))
-      )}
+    <div style={{ margin: "20px", maxHeight: "400px", overflowY: "auto", border: "1px solid #ccc", padding: "10px" }}>
+      {messages.map((msg, index) => (
+        <div key={index} style={{ marginBottom: "10px" }}>
+          <div><strong>User:</strong> {msg.user}</div>
+          <div><strong>AI:</strong> {msg.response}</div>
+        </div>
+      ))}
     </div>
   );
-};
+}
 
 export default MessageList;
