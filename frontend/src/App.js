@@ -1,11 +1,9 @@
 import React from "react";
-import ChatBox from "./components/ChatBox";
 
 function App() {
   return (
     <div>
-      <h1>Interactive Chat Application</h1>
-      <ChatBox />
+      <h1>Welcome to the Testcontainers GenAI Demo</h1>
     </div>
   );
 }
