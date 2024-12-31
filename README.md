@@ -44,6 +44,36 @@ $ cd testcontainers-genai-demo
 
 ---
 
+## Directory Structure
+
+```plaintext
+testcontainers-genai-demo/
+├── backend/
+│   ├── app.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── database/
+│   │   ├── init.sql
+│   ├── tests/
+│   │   ├── test_chat.py
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── components/
+│   │   │   ├── ChatBox.js
+│   │   │   ├── MessageList.js
+│   │   ├── services/
+│   │   │   ├── api.js
+│   ├── package.json
+│   ├── Dockerfile
+├── docker-compose.yml
+├── README.md
+└── .env.example
+```
+
+---
+
 ## Setting Up the Application
 
 ### 1. **Backend Setup**
@@ -145,4 +175,3 @@ This project is licensed under the MIT License.
 - [OpenAI API Documentation](https://platform.openai.com/docs/)
 - [Testcontainers Python](https://testcontainers-python.readthedocs.io/)
 - [React Documentation](https://reactjs.org/docs/getting-started.html)
-
