@@ -62,6 +62,8 @@ testcontainers-genai-demo/
 │   │   ├── favicon.ico
 │   ├── src/
 │   │   ├── App.js
+│   │   ├── App.css
+│   │   ├── index.js
 │   │   ├── components/
 │   │   │   ├── ChatBox.js
 │   │   │   ├── MessageList.js
