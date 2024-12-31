@@ -52,8 +52,6 @@ testcontainers-genai-demo/
 │   ├── app.py
 │   ├── requirements.txt
 │   ├── Dockerfile
-│   ├── database/
-│   │   ├── init.sql
 │   ├── tests/
 │   │   ├── test_chat.py
 │   │   ├── test_database.py
@@ -64,6 +62,8 @@ testcontainers-genai-demo/
 │   │   ├── favicon.ico
 │   ├── src/
 │   │   ├── App.js
+│   │   ├── App.css
+│   │   ├── index.js
 │   │   ├── components/
 │   │   │   ├── ChatBox.js
 │   │   │   ├── MessageList.js
@@ -72,6 +72,8 @@ testcontainers-genai-demo/
 │   ├── package.json
 │   ├── Dockerfile
 ├── docker-compose.yml
+├── db-init/
+│   ├── init.sql
 ├── README.md
 └── .env.example
 ```
