@@ -26,7 +26,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["./wait-for-it.sh", "postgres-db", "--", "python", "app.py"]
+    command: ["sh", "-c", "chmod +x /app/wait-for-it.sh && /app/wait-for-it.sh postgres-db -- python app.py"]
     volumes:
       - ./backend:/app
 
