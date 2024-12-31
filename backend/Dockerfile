@@ -2,15 +2,17 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install postgresql-client for pg_isready and upgrade pip
+# Install PostgreSQL client and dependencies
 RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install dependencies
 RUN pip install --upgrade pip
 
-# Copy requirements and install dependencies
+# Copy requirements and install
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Copy application files
+# Copy application code
 COPY . .
 
 # Ensure wait-for-it.sh is executable

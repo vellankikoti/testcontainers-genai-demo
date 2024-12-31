@@ -21,7 +21,11 @@ class ChatHistory(db.Model):
 # Ensure tables are created
 @app.before_first_request
 def create_tables():
-    db.create_all()
+    try:
+        db.create_all()
+        print("Database tables created successfully!")
+    except Exception as e:
+        print(f"Error creating database tables: {str(e)}")
 
 # Health check endpoint
 @app.route("/health", methods=["GET"])
@@ -32,10 +36,10 @@ def health_check():
 @app.route("/test-db", methods=["GET"])
 def test_db():
     try:
-        result = db.session.execute("SELECT 1").scalar()
-        return jsonify({"db_status": "connected", "result": result})
+        db.session.execute("SELECT 1").scalar()
+        return jsonify({"status": "Database connected successfully!"})
     except Exception as e:
-        return jsonify({"db_status": "error", "error": str(e)}), 500
+        return jsonify({"status": "Error connecting to database", "error": str(e)}), 500
 
 # Chat endpoint
 @app.route("/chat", methods=["POST"])
@@ -43,10 +47,13 @@ def chat():
     data = request.json
     user_message = data.get("message", "")
     ai_responses = {"Normal": "Mock response"}  # Replace with actual AI response logic
-    chat_entry = ChatHistory(user_message=user_message, ai_responses=ai_responses)
-    db.session.add(chat_entry)
-    db.session.commit()
-    return jsonify({"responses": ai_responses})
+    try:
+        chat_entry = ChatHistory(user_message=user_message, ai_responses=ai_responses)
+        db.session.add(chat_entry)
+        db.session.commit()
+        return jsonify({"responses": ai_responses})
+    except Exception as e:
+        return jsonify({"status": "Error saving to database", "error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
