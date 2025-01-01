@@ -13,7 +13,7 @@ CORS(app)
 
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-    "DATABASE_URL", "postgresql://testuser:testpass@db:5432/testdb"
+    "DATABASE_URL", "postgresql://testuser:testpass@postgres-db:5432/testdb"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
@@ -34,11 +34,12 @@ def create_tables():
 
 # Role-specific prompts
 role_prompts = {
-    "Manager": "Respond as a strategic Manager.",
-    "Developer": "Respond as a Developer with code examples.",
-    "QA": "Respond as a QA Tester with detailed test cases.",
-    "DevOps": "Respond as a DevOps Engineer with deployment advice.",
-    "Funny": "Respond humorously with jokes or sarcasm.",
+    "Manager": "You are a Manager. Respond with strategic insights.",
+    "Developer": "You are a Developer. Provide code examples where appropriate.",
+    "QA": "You are a QA Tester. Provide detailed test cases.",
+    "DevOps": "You are a DevOps Engineer. Provide deployment-related advice.",
+    "Funny": "You are a humorous assistant. Respond with jokes or sarcasm.",
+    "Normal": "You are a helpful assistant. Respond succinctly.",
 }
 
 @app.route("/chat", methods=["POST"])
@@ -51,13 +52,12 @@ def chat():
         return jsonify({"error": "Message is required"}), 400
 
     # Generate response from OpenAI
-    prompt = f"{role_prompts.get(role, '')}\nUser: {user_message}\nAI:"
     try:
-        # Use a chat-based model (e.g., gpt-3.5-turbo)
+        # Use OpenAI Chat API with the gpt-3.5-turbo model
         completion = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": role_prompts.get(role, "")},
+                {"role": "system", "content": role_prompts.get(role, "You are a helpful assistant.")},
                 {"role": "user", "content": user_message},
             ],
         )
