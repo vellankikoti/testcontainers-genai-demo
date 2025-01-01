@@ -3,10 +3,10 @@ import React from "react";
 function MessageList({ messages }) {
   return (
     <div className="message-list">
-      {messages.map((msg, index) => (
-        <div key={index} className="message">
-          <p><strong>You:</strong> {msg.user}</p>
-          <p><strong>{msg.role}:</strong> {msg.response}</p>
+      {messages.map((message, index) => (
+        <div key={index} className="message-item">
+          <p><strong>You:</strong> {message.user}</p>
+          <p><strong>AI ({message.role}):</strong> {message.ai}</p>
         </div>
       ))}
     </div>
