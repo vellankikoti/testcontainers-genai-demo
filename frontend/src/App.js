@@ -1,97 +1,81 @@
-import React, { useState } from "react";
-import "./App.css";
-import ChatBox from "./components/ChatBox";
-import MessageList from "./components/MessageList";
-import { fetchChatResponse } from "./services/api";
+import os
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+import openai
+import logging
+from dotenv import load_dotenv
 
-function App() {
-  const [question, setQuestion] = useState("");
-  const [response, setResponse] = useState("");
-  const [perspective, setPerspective] = useState("Normal");
-  const [error, setError] = useState("");
-  const [messages, setMessages] = useState([]);
+# Load environment variables
+load_dotenv()
 
-  const handleResponse = async (role = "Normal") => {
-    if (!question.trim()) {
-      setError("Please type a question first!");
-      return;
-    }
-    setError("");
-    setPerspective(role);
+# Initialize Flask app
+app = Flask(__name__)
+CORS(app)
 
-    try {
-      const res = await fetchChatResponse(question, role);
-      setResponse(res);
-      setMessages((prev) => [
-        ...prev,
-        { user: question, ai: res, role },
-      ]);
-    } catch (err) {
-      console.error("Error fetching response:", err);
-      setError(err.message || "An unexpected error occurred.");
-      setResponse("");
-    }
-    setQuestion(""); // Reset question input after processing
-  };
+# Database configuration
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL", "postgresql://testuser:testpass@postgres-db:5432/testdb"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db = SQLAlchemy(app)
 
-  return (
-    <div className="app">
-      <div className="chat-container">
-        <h1 className="chat-title">Testcontainers GenAI Demo</h1>
-        <ChatBox
-          question={question}
-          setQuestion={setQuestion}
-          error={error}
-          onSendMessage={() => handleResponse("Normal")}
-        />
-        {error && <p className="error-message">{error}</p>}
-        {response && (
-          <div className="response-container">
-            <strong>Response:</strong>
-            <p>{response}</p>
-          </div>
-        )}
-        <div className="chat-buttons">
-          <button
-            className="chat-button manager"
-            onClick={() => handleResponse("Manager")}
-          >
-            Manager
-            <span className="button-label">If you're a Manager</span>
-          </button>
-          <button
-            className="chat-button developer"
-            onClick={() => handleResponse("Developer")}
-          >
-            Developer
-            <span className="button-label">If you're a Developer</span>
-          </button>
-          <button
-            className="chat-button qa"
-            onClick={() => handleResponse("QA")}
-          >
-            QA
-            <span className="button-label">If you're a QA (Manual / Automation)</span>
-          </button>
-          <button
-            className="chat-button devops"
-            onClick={() => handleResponse("DevOps")}
-          >
-            DevOps
-            <span className="button-label">If you're a DevOps Engineer</span>
-          </button>
-          <button
-            className="chat-button funny"
-            onClick={() => handleResponse("Funny")}
-          >
-            Fun!!
-            <span className="button-label">If you're funny</span>
-          </button>
-        </div>
-        <MessageList messages={messages} />
-      </div>
-    </div>
-  );
+# OpenAI API Key
+openai.api_key = os.getenv("OPENAI_API_KEY")
+logging.basicConfig(level=logging.DEBUG)
+
+# Database model
+class ChatHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_message = db.Column(db.Text, nullable=False)
+    ai_response = db.Column(db.Text, nullable=False)
+    role = db.Column(db.String(50), nullable=False)
+
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
+role_prompts = {
+    "Manager": "You are a Manager. Provide strategic advice.",
+    "Developer": "You are a Developer. Provide technical insights and code examples.",
+    "QA": "You are a QA Tester. Provide detailed test cases.",
+    "DevOps": "You are a DevOps Engineer. Provide deployment advice.",
+    "Funny": "You are a humorous assistant. Respond with jokes or sarcasm.",
+    "Normal": "You are a helpful assistant. Provide straightforward advice.",
 }
 
-export default App;
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.json
+    user_message = data.get("message", "").strip()
+    role = data.get("role", "Normal")
+
+    if not user_message:
+        logging.error("No user message provided.")
+        return jsonify({"error": "Message is required"}), 400
+
+    try:
+        logging.info(f"Received message: {user_message} with role: {role}")
+        prompt = role_prompts.get(role, "You are a helpful assistant.")
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": user_message},
+            ],
+        )
+        ai_response = completion.choices[0].message.content.strip()
+        logging.info(f"Generated response: {ai_response}")
+
+        # Save chat history to database
+        chat = ChatHistory(user_message=user_message, ai_response=ai_response, role=role)
+        db.session.add(chat)
+        db.session.commit()
+
+        return jsonify({"response": ai_response})
+    except Exception as e:
+        logging.error(f"Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
