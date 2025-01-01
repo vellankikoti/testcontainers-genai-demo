@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import "./App.css";
+import ChatBox from "./components/ChatBox";
+import MessageList from "./components/MessageList";
+import { fetchChatResponse } from "./services/api";
 
 function App() {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState("");
   const [perspective, setPerspective] = useState("");
   const [error, setError] = useState("");
+  const [messages, setMessages] = useState([]);
 
   const handleResponse = async (role) => {
     if (!question.trim()) {
@@ -16,50 +20,30 @@ function App() {
     setPerspective(role);
 
     try {
-      const res = await fetch("http://localhost:5000/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: question, role }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to fetch response");
-      }
-
-      const data = await res.json();
-      if (data.response) {
-        setResponse(data.response);
-      } else {
-        setResponse("No response received. Please try again.");
-      }
+      const res = await fetchChatResponse(question, role);
+      setResponse(res);
+      setMessages((prev) => [
+        ...prev,
+        { user: question, ai: res, role },
+      ]);
     } catch (err) {
       setError(err.message || "An unexpected error occurred.");
       setResponse("");
     }
-
-    setQuestion(""); // Clear the input field
+    setQuestion("");
   };
 
   return (
     <div className="app">
       <div className="chat-container">
-        <h1 className="chat-title">What's your Question?</h1>
-        <input
-          type="text"
-          className="chat-input"
-          placeholder="Type your question here..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+        <h1 className="chat-title">Testcontainers GenAI Demo</h1>
+        <ChatBox
+          question={question}
+          setQuestion={setQuestion}
+          response={response}
+          error={error}
+          onSendMessage={() => handleResponse("Normal")}
         />
-        {response && (
-          <div className="chat-response">
-            <p>
-              <strong>{perspective}:</strong> {response}
-            </p>
-          </div>
-        )}
-        {error && <p className="chat-error">{error}</p>}
         <div className="chat-buttons">
           <button className="chat-button manager" onClick={() => handleResponse("Manager")}>
             Manager
@@ -82,6 +66,7 @@ function App() {
             <span className="button-label">If you're funny</span>
           </button>
         </div>
+        <MessageList messages={messages} />
       </div>
     </div>
   );
