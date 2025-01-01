@@ -18,29 +18,25 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
     container_name: backend
-    ports:
-      - "5000:5000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - DATABASE_URL=postgresql://testuser:testpass@postgres-db:5432/testdb
+    ports:
+      - "5000:5000"
     depends_on:
       db:
         condition: service_healthy
     command: ["sh", "-c", "chmod +x /app/wait-for-it.sh && /app/wait-for-it.sh postgres-db -- python app.py"]
-    volumes:
-      - ./backend:/app
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
     container_name: frontend
     ports:
       - "80:80"
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     environment:
-      - REACT_APP_BACKEND_URL=http://backend:5000
+      - REACT_APP_API_BASE_URL=http://backend:5000
