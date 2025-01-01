@@ -34,10 +34,10 @@ def create_tables():
 
 # Role-specific prompts
 role_prompts = {
-    "Manager": "You are a Manager. Respond with strategic insights.",
-    "Developer": "You are a Developer. Provide code examples where appropriate.",
+    "Manager": "You are a strategic Manager. Respond with insights.",
+    "Developer": "You are a Developer. Provide technical advice and code examples.",
     "QA": "You are a QA Tester. Provide detailed test cases.",
-    "DevOps": "You are a DevOps Engineer. Provide deployment-related advice.",
+    "DevOps": "You are a DevOps Engineer. Share deployment-related advice.",
     "Funny": "You are a humorous assistant. Respond with jokes or sarcasm.",
     "Normal": "You are a helpful assistant. Respond succinctly.",
 }
@@ -53,7 +53,6 @@ def chat():
 
     # Generate response from OpenAI
     try:
-        # Use OpenAI Chat API with the gpt-3.5-turbo model
         completion = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -69,7 +68,7 @@ def chat():
         db.session.commit()
 
         return jsonify({"response": ai_response})
-    except Exception as e:
+    except openai.error.OpenAIError as e:
         return jsonify({"error": str(e)}), 500
 
 
