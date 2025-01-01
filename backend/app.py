@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all origins
 
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
@@ -30,6 +30,7 @@ class ChatHistory(db.Model):
 
 @app.before_first_request
 def create_tables():
+    """Create database tables before the first request."""
     db.create_all()
 
 # Role-specific prompts
