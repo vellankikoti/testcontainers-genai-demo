@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -18,8 +18,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-# OpenAI API Key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI()
 
 # Database model for chat history
 class ChatHistory(db.Model):
@@ -54,12 +53,12 @@ def chat():
     # Generate response from OpenAI
     prompt = f"{role_prompts.get(role, '')}\nUser: {user_message}\nAI:"
     try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
             prompt=prompt,
             max_tokens=150,
         )
-        ai_response = response.choices[0].text.strip()
+        ai_response = completion.choices[0].text.strip()
 
         # Save to database
         chat = ChatHistory(user_message=user_message, ai_response=ai_response, role=role)

@@ -6,23 +6,36 @@ function App() {
   const [response, setResponse] = useState("");
   const [perspective, setPerspective] = useState("");
 
-  const handleResponse = (role) => {
+  const handleResponse = async (role) => {
     if (!question.trim()) {
       alert("Please type a question first!");
       return;
     }
+    setPerspective(role);
+    const response = await fetch("http://18.212.100.96:5000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: question, role }),
+      });
+      const data = await response.json();
+      console.log(data);
+      if (data.response) {
+        setResponse(data);
+      }
+      setQuestion("");
+
 
     // Mock responses based on role
-    const responses = {
-      Manager: `As a Manager, I think "${question}" requires leadership insights!`,
-      Developer: `As a Developer: Here's some pseudocode for "${question}"...`,
-      QA: `As QA, I’d say: "${question}" needs thorough testing.`,
-      DevOps: `As a DevOps Engineer: "${question}" will be deployed seamlessly.`,
-      Funny: `Haha! "${question}" reminds me of a joke.`,
-    };
+    // const responses = {
+    //   Manager: `As a Manager, I think "${question}" requires leadership insights!`,
+    //   Developer: `As a Developer: Here's some pseudocode for "${question}"...`,
+    //   QA: `As QA, I’d say: "${question}" needs thorough testing.`,
+    //   DevOps: `As a DevOps Engineer: "${question}" will be deployed seamlessly.`,
+    //   Funny: `Haha! "${question}" reminds me of a joke.`,
+    // };
 
-    setPerspective(role);
-    setResponse(responses[role]);
+    // setPerspective(role);
+    // setResponse(responses[role]);
   };
 
   return (
