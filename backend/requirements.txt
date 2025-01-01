@@ -1,6 +1,6 @@
 Flask==2.2.2
 Flask-SQLAlchemy==2.5.1
-openai==0.27.0
+openai
 psycopg2-binary==2.9.5
 pytest==7.2.0
 testcontainers==3.7.1

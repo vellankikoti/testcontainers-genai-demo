@@ -54,9 +54,9 @@ def chat():
     prompt = f"{role_prompts.get(role, '')}\nUser: {user_message}\nAI:"
     try:
         completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            prompt=prompt,
+            model="gpt-3.5-turbo-instruct",
             max_tokens=150,
+            messages= [{"role": "user", "content": user_message}]
         )
         ai_response = completion.choices[0].text.strip()
 
