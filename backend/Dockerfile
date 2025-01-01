@@ -9,15 +9,14 @@ RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/ap
 RUN pip install --upgrade pip
 
 # Copy requirements and install dependencies
-COPY requirements.txt ./
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy application code
-COPY . ./
+COPY . .
 
-# Set permissions explicitly for wait-for-it.sh inside the container
-RUN chmod +x /app/wait-for-it.sh
+# Ensure wait-for-it.sh is executable
+RUN chmod +x wait-for-it.sh
 
 # Use wait-for-it.sh to delay backend startup until the database is ready
-CMD ["/bin/bash", "-c", "until pg_isready -h postgres-db -p 5432; do sleep 1; done && python app.py"]
-
+CMD ["sh", "-c", "chmod +x /app/wait-for-it.sh && /app/wait-for-it.sh postgres-db -- python app.py"]
