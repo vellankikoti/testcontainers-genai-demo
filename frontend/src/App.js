@@ -7,7 +7,7 @@ import { fetchChatResponse } from "./services/api";
 function App() {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState("");
-  const [perspective, setPerspective] = useState("");
+  const [perspective, setPerspective] = useState("Normal");
   const [error, setError] = useState("");
   const [messages, setMessages] = useState([]);
 
@@ -40,10 +40,10 @@ function App() {
         <ChatBox
           question={question}
           setQuestion={setQuestion}
-          response={response}
           error={error}
           onSendMessage={() => handleResponse("Normal")}
         />
+        <MessageList messages={messages} />
         <div className="chat-buttons">
           <button className="chat-button manager" onClick={() => handleResponse("Manager")}>
             Manager
@@ -66,7 +66,6 @@ function App() {
             <span className="button-label">If you're funny</span>
           </button>
         </div>
-        <MessageList messages={messages} />
       </div>
     </div>
   );
