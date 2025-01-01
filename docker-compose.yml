@@ -10,11 +10,6 @@ services:
       - "5432:5432"
     volumes:
       - ./db-init:/docker-entrypoint-initdb.d
-    healthcheck:  # Optional, to monitor manually
-      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb -h localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   backend:
     build:
@@ -25,11 +20,11 @@ services:
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       DATABASE_URL: "postgresql+psycopg2://testuser:testpass@postgres-db:5432/testdb"
-    depends_on:  # Basic dependency to ensure `db` is started before `backend`
+    depends_on:
       - db
     command: >
       sh -c "chmod +x /app/wait-for-it.sh &&
-      /app/wait-for-it.sh postgres-db:5432 -- python app.py"
+      /app/wait-for-it.sh -t 60 postgres-db:5432 -- python app.py"
     volumes:
       - ./backend:/app
 
@@ -39,7 +34,7 @@ services:
     container_name: frontend
     ports:
       - "80:80"
-    depends_on:  # Ensure `backend` starts before `frontend`
+    depends_on:
       - backend
     environment:
       REACT_APP_API_BASE_URL: "http://backend:5000"
