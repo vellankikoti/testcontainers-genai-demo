@@ -1,19 +1,24 @@
-export const sendMessage = async (message) => {
-    try {
-      const response = await fetch("http://localhost:5000/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-  
-      return await response.json();
-    } catch (error) {
-      console.error("API error:", error);
-      return { responses: { error: "Failed to connect to the server." } };
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
+export const fetchChatResponse = async (message, role) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message, role }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to fetch response");
     }
-  };
-  
+
+    const data = await response.json();
+    return data.response || "No response received.";
+  } catch (error) {
+    console.error("Error fetching chat response:", error);
+    throw error;
+  }
+};
