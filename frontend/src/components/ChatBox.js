@@ -1,6 +1,6 @@
 import React from "react";
 
-function ChatBox({ question, setQuestion, response, error, onSendMessage }) {
+function ChatBox({ question, setQuestion, error, onSendMessage }) {
   return (
     <div className="chat-box">
       <input
@@ -10,15 +10,10 @@ function ChatBox({ question, setQuestion, response, error, onSendMessage }) {
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
       />
-      <button className="chat-send-button" onClick={onSendMessage}>
-        Ask
+      <button className="send-button" onClick={onSendMessage}>
+        Send
       </button>
-      {response && (
-        <div className="chat-response">
-          <p><strong>Response:</strong> {response}</p>
-        </div>
-      )}
-      {error && <p className="chat-error">{error}</p>}
+      {error && <div className="error-message">{error}</div>}
     </div>
   );
 }
