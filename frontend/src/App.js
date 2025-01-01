@@ -1,57 +1,94 @@
 import React, { useState } from "react";
 import "./App.css";
+import ChatBox from "./components/ChatBox";
+import MessageList from "./components/MessageList";
 import { fetchChatResponse } from "./services/api";
 
 function App() {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState("");
+  const [perspective, setPerspective] = useState("Normal");
   const [error, setError] = useState("");
+  const [messages, setMessages] = useState([]);
 
-  const handleResponse = async (role) => {
-    console.log(`Triggered handleResponse with role: ${role}`);
-
+  const handleResponse = async (role = "Normal") => {
     if (!question.trim()) {
-      console.error("No question provided. Showing error.");
       setError("Please type a question first!");
       return;
     }
     setError("");
+    setPerspective(role);
 
     try {
-      console.log("Calling fetchChatResponse...");
       const res = await fetchChatResponse(question, role);
-      console.log("Response received:", res);
       setResponse(res);
+      setMessages((prev) => [
+        ...prev,
+        { user: question, ai: res, role },
+      ]);
     } catch (err) {
-      console.error("Error in handleResponse:", err);
+      console.error("Error fetching response:", err);
       setError(err.message || "An unexpected error occurred.");
+      setResponse("");
     }
-    setQuestion("");
+    setQuestion(""); // Reset question input after processing
   };
 
   return (
     <div className="app">
       <div className="chat-container">
         <h1 className="chat-title">Testcontainers GenAI Demo</h1>
-        <input
-          type="text"
-          className="chat-input"
-          placeholder="Type your question here..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+        <ChatBox
+          question={question}
+          setQuestion={setQuestion}
+          error={error}
+          onSendMessage={() => handleResponse("Normal")}
         />
-        <button className="send-button" onClick={() => handleResponse("Normal")}>
-          Send
-        </button>
-        {error && <p className="error">Error: {error}</p>}
-        {response && <p className="response">{response}</p>}
+        {error && <p className="error-message">{error}</p>}
+        {response && (
+          <div className="response-container">
+            <strong>Response:</strong>
+            <p>{response}</p>
+          </div>
+        )}
         <div className="chat-buttons">
-          <button onClick={() => handleResponse("Manager")}>Manager</button>
-          <button onClick={() => handleResponse("Developer")}>Developer</button>
-          <button onClick={() => handleResponse("QA")}>QA</button>
-          <button onClick={() => handleResponse("DevOps")}>DevOps</button>
-          <button onClick={() => handleResponse("Funny")}>Funny</button>
+          <button
+            className="chat-button manager"
+            onClick={() => handleResponse("Manager")}
+          >
+            Manager
+            <span className="button-label">If you're a Manager</span>
+          </button>
+          <button
+            className="chat-button developer"
+            onClick={() => handleResponse("Developer")}
+          >
+            Developer
+            <span className="button-label">If you're a Developer</span>
+          </button>
+          <button
+            className="chat-button qa"
+            onClick={() => handleResponse("QA")}
+          >
+            QA
+            <span className="button-label">If you're a QA (Manual / Automation)</span>
+          </button>
+          <button
+            className="chat-button devops"
+            onClick={() => handleResponse("DevOps")}
+          >
+            DevOps
+            <span className="button-label">If you're a DevOps Engineer</span>
+          </button>
+          <button
+            className="chat-button funny"
+            onClick={() => handleResponse("Funny")}
+          >
+            Fun!!
+            <span className="button-label">If you're funny</span>
+          </button>
         </div>
+        <MessageList messages={messages} />
       </div>
     </div>
   );
