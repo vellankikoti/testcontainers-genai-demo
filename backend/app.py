@@ -20,7 +20,8 @@ db = SQLAlchemy(app)
 
 # OpenAI API Key
 openai.api_key = os.getenv("OPENAI_API_KEY")
-print("Loaded OpenAI API Key:", bool(openai.api_key))
+if not openai.api_key:
+    print("[ERROR] OPENAI_API_KEY is not set or loaded correctly!")
 
 # Database model for chat history
 class ChatHistory(db.Model):
@@ -32,8 +33,11 @@ class ChatHistory(db.Model):
 @app.before_first_request
 def create_tables():
     """Create database tables before the first request."""
-    print("Creating database tables...")
-    db.create_all()
+    try:
+        db.create_all()
+        print("[INFO] Database tables created successfully.")
+    except Exception as e:
+        print(f"[ERROR] Error creating database tables: {e}")
 
 # Role-specific prompts
 role_prompts = {
@@ -50,20 +54,21 @@ def chat():
     """
     Handle user messages and generate AI responses based on the role.
     """
-    print("Received request for /chat")
-    data = request.json
-    print("Request data:", data)
-    user_message = data.get("message", "").strip()
-    role = data.get("role", "Normal")
-
-    if not user_message:
-        print("Error: Message is required.")
-        return jsonify({"error": "Message is required"}), 400
-
     try:
+        print("[INFO] Received /chat request.")
+        data = request.json
+        print(f"[DEBUG] Request data: {data}")
+
+        user_message = data.get("message", "").strip()
+        role = data.get("role", "Normal")
+
+        if not user_message:
+            print("[ERROR] No message provided in request.")
+            return jsonify({"error": "Message is required"}), 400
+
+        # Construct the OpenAI API request
         prompt = role_prompts.get(role, "You are a helpful assistant.")
-        print(f"Using role prompt: {prompt}")
-        print(f"User message: {user_message}")
+        print(f"[DEBUG] Using prompt: {prompt}")
 
         completion = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -75,31 +80,35 @@ def chat():
             temperature=0.7,
         )
         ai_response = completion.choices[0].message["content"].strip()
-        print("Generated AI response:", ai_response)
+        print(f"[DEBUG] Generated AI response: {ai_response}")
 
         # Save the interaction to the database
         chat = ChatHistory(user_message=user_message, ai_response=ai_response, role=role)
         db.session.add(chat)
         db.session.commit()
-        print("Saved chat history to the database.")
+        print("[INFO] Chat saved to database.")
 
         return jsonify({"response": ai_response})
+    except openai.error.InvalidRequestError as e:
+        print(f"[ERROR] OpenAI API InvalidRequestError: {e}")
+        return jsonify({"error": f"OpenAI API error: {e}"}), 400
+    except openai.error.AuthenticationError as e:
+        print(f"[ERROR] OpenAI API AuthenticationError: {e}")
+        return jsonify({"error": "Invalid OpenAI API key."}), 401
     except openai.error.OpenAIError as e:
-        print(f"OpenAI API Error: {str(e)}")
-        return jsonify({"error": f"OpenAI API error: {str(e)}"}), 500
+        print(f"[ERROR] OpenAI API Error: {e}")
+        return jsonify({"error": f"OpenAI API error: {e}"}), 500
     except Exception as e:
-        print(f"Internal Server Error: {str(e)}")
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+        print(f"[ERROR] Internal Server Error: {e}")
+        return jsonify({"error": f"Internal server error: {e}"}), 500
 
 @app.route("/history", methods=["GET"])
 def get_history():
     """
     Retrieve the chat history from the database.
     """
-    print("Fetching chat history...")
     try:
         chats = ChatHistory.query.all()
-        print(f"Found {len(chats)} chat records.")
         return jsonify(
             [
                 {
@@ -112,9 +121,9 @@ def get_history():
             ]
         )
     except Exception as e:
-        print(f"Error retrieving history: {str(e)}")
-        return jsonify({"error": f"Failed to retrieve history: {str(e)}"}), 500
+        print(f"[ERROR] Error retrieving history: {e}")
+        return jsonify({"error": f"Failed to retrieve history: {e}"}), 500
 
 if __name__ == "__main__":
-    print("Starting Flask app...")
+    print("[INFO] Starting Flask app...")
     app.run(host="0.0.0.0", port=5000)
