@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Initialize Flask app
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all origins
 
@@ -76,16 +77,16 @@ def chat():
 
         return jsonify({"response": ai_response})
     except openai.error.InvalidRequestError as e:
-        print(f"OpenAI API InvalidRequestError: {str(e)}")
+        app.logger.error(f"OpenAI API InvalidRequestError: {str(e)}")
         return jsonify({"error": f"OpenAI API error: {str(e)}"}), 400
     except openai.error.AuthenticationError as e:
-        print(f"OpenAI API AuthenticationError: {str(e)}")
+        app.logger.error(f"OpenAI API AuthenticationError: {str(e)}")
         return jsonify({"error": "Invalid OpenAI API key."}), 401
     except openai.error.OpenAIError as e:
-        print(f"OpenAI API Error: {str(e)}")
+        app.logger.error(f"OpenAI API Error: {str(e)}")
         return jsonify({"error": f"OpenAI API error: {str(e)}"}), 500
     except Exception as e:
-        print(f"Internal Server Error: {str(e)}")
+        app.logger.error(f"Internal Server Error: {str(e)}")
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @app.route("/history", methods=["GET"])
@@ -107,8 +108,13 @@ def get_history():
             ]
         )
     except Exception as e:
-        print(f"Error retrieving history: {str(e)}")
+        app.logger.error(f"Error retrieving history: {str(e)}")
         return jsonify({"error": f"Failed to retrieve history: {str(e)}"}), 500
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors with a custom response."""
+    return jsonify({"error": "Endpoint not found"}), 404
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
