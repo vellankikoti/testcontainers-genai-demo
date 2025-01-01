@@ -27,12 +27,10 @@ class ChatHistory(db.Model):
     ai_response = db.Column(db.Text, nullable=False)
     role = db.Column(db.String(50), nullable=False)
 
-# Ensure tables are created
 @app.before_first_request
 def create_tables():
     db.create_all()
 
-# Role-specific prompts
 role_prompts = {
     "Manager": "You are a strategic Manager. Respond with insights.",
     "Developer": "You are a Developer. Provide technical advice and code examples.",
@@ -51,7 +49,6 @@ def chat():
     if not user_message:
         return jsonify({"error": "Message is required"}), 400
 
-    # Generate response from OpenAI
     try:
         completion = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -62,24 +59,22 @@ def chat():
         )
         ai_response = completion.choices[0].message["content"].strip()
 
-        # Save to database
         chat = ChatHistory(user_message=user_message, ai_response=ai_response, role=role)
         db.session.add(chat)
         db.session.commit()
 
         return jsonify({"response": ai_response})
     except openai.error.OpenAIError as e:
-        return jsonify({"error": str(e)}), 500
-
+        return jsonify({"error": f"OpenAI API error: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @app.route("/history", methods=["GET"])
 def get_history():
-    """Retrieve chat history."""
     chats = ChatHistory.query.all()
     return jsonify(
         [{"id": chat.id, "user": chat.user_message, "ai": chat.ai_response, "role": chat.role} for chat in chats]
     )
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
