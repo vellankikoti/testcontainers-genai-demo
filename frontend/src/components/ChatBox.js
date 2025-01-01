@@ -1,41 +1,24 @@
-import React, { useState } from "react";
-import MessageList from "./MessageList";
+import React from "react";
 
-function ChatBox() {
-  const [question, setQuestion] = useState("");
-  const [messages, setMessages] = useState([]);
-
-  const sendMessage = async (role) => {
-    if (!question.trim()) return;
-    const response = await fetch("http://localhost:5000/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: question, role }),
-    });
-    const data = await response.json();
-    if (data.response) {
-      setMessages([...messages, { user: question, role, response: data.response }]);
-    }
-    setQuestion("");
-  };
-
+function ChatBox({ question, setQuestion, response, error, onSendMessage }) {
   return (
     <div className="chat-box">
-      <MessageList messages={messages} />
       <input
         type="text"
+        className="chat-input"
+        placeholder="Type your question here..."
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
-        placeholder="What's your question?"
-        className="chat-input"
       />
-      <div className="button-group">
-        {["Manager", "Developer", "QA", "DevOps", "Funny"].map((role) => (
-          <button key={role} onClick={() => sendMessage(role)}>
-            {role}
-          </button>
-        ))}
-      </div>
+      <button className="chat-send-button" onClick={onSendMessage}>
+        Ask
+      </button>
+      {response && (
+        <div className="chat-response">
+          <p><strong>Response:</strong> {response}</p>
+        </div>
+      )}
+      {error && <p className="chat-error">{error}</p>}
     </div>
   );
 }
