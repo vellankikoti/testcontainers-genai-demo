@@ -32,12 +32,12 @@ def create_tables():
     db.create_all()
 
 role_prompts = {
-    "Manager": "You are a strategic Manager. Respond with insights.",
-    "Developer": "You are a Developer. Provide technical advice and code examples.",
+    "Manager": "You are a Manager. Provide strategic advice.",
+    "Developer": "You are a Developer. Provide technical insights and code examples.",
     "QA": "You are a QA Tester. Provide detailed test cases.",
-    "DevOps": "You are a DevOps Engineer. Share deployment-related advice.",
+    "DevOps": "You are a DevOps Engineer. Provide deployment advice.",
     "Funny": "You are a humorous assistant. Respond with jokes or sarcasm.",
-    "Normal": "You are a helpful assistant. Respond succinctly.",
+    "Normal": "You are a helpful assistant. Provide straightforward advice.",
 }
 
 @app.route("/chat", methods=["POST"])
