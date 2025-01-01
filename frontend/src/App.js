@@ -5,37 +5,40 @@ function App() {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState("");
   const [perspective, setPerspective] = useState("");
+  const [error, setError] = useState("");
 
   const handleResponse = async (role) => {
     if (!question.trim()) {
-      alert("Please type a question first!");
+      setError("Please type a question first!");
       return;
     }
+    setError("");
     setPerspective(role);
-    const response = await fetch("http://18.212.100.96:5000/chat", {
+
+    try {
+      const res = await fetch("http://localhost:5000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: question, role }),
       });
-      const data = await response.json();
-      console.log(data);
-      if (data.response) {
-        setResponse(data);
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to fetch response");
       }
-      setQuestion("");
 
+      const data = await res.json();
+      if (data.response) {
+        setResponse(data.response);
+      } else {
+        setResponse("No response received. Please try again.");
+      }
+    } catch (err) {
+      setError(err.message || "An unexpected error occurred.");
+      setResponse("");
+    }
 
-    // Mock responses based on role
-    // const responses = {
-    //   Manager: `As a Manager, I think "${question}" requires leadership insights!`,
-    //   Developer: `As a Developer: Here's some pseudocode for "${question}"...`,
-    //   QA: `As QA, I’d say: "${question}" needs thorough testing.`,
-    //   DevOps: `As a DevOps Engineer: "${question}" will be deployed seamlessly.`,
-    //   Funny: `Haha! "${question}" reminds me of a joke.`,
-    // };
-
-    // setPerspective(role);
-    // setResponse(responses[role]);
+    setQuestion(""); // Clear the input field
   };
 
   return (
@@ -51,9 +54,12 @@ function App() {
         />
         {response && (
           <div className="chat-response">
-            <p><strong>{perspective}:</strong> {response}</p>
+            <p>
+              <strong>{perspective}:</strong> {response}
+            </p>
           </div>
         )}
+        {error && <p className="chat-error">{error}</p>}
         <div className="chat-buttons">
           <button className="chat-button manager" onClick={() => handleResponse("Manager")}>
             Manager
