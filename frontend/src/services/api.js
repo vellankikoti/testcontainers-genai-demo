@@ -1,15 +1,15 @@
-const API_BASE_URL = "http://backend:5000";
-
 export const fetchChatResponse = async (message, role) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/chat`, {
+    const response = await fetch("/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ message, role }),
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error("Failed to fetch response from server.");
     }
 
     const data = await response.json();
