@@ -11,8 +11,9 @@ services:
     volumes:
       - ./db-init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb -h localhost"]
       interval: 10s
+      timeout: 5s
       retries: 5
 
   backend:
@@ -22,16 +23,19 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - DATABASE_URL=${DATABASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DATABASE_URL: "postgresql+psycopg2://testuser:testpass@postgres-db:5432/testdb"
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
       interval: 10s
+      timeout: 5s
       retries: 5
-    command: ["sh", "-c", "chmod +x /app/wait-for-it.sh && /app/wait-for-it.sh postgres-db -- python app.py"]
+    command: >
+      sh -c "chmod +x /app/wait-for-it.sh &&
+      /app/wait-for-it.sh postgres-db:5432 -- python app.py"
     volumes:
       - ./backend:/app
 
@@ -45,6 +49,6 @@ services:
       backend:
         condition: service_healthy
     environment:
-      - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
+      REACT_APP_API_BASE_URL: "http://localhost:5000"
     volumes:
       - ./frontend:/app
