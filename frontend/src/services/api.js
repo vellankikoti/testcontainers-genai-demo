@@ -1,6 +1,8 @@
+const API_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+
 export const fetchChatResponse = async (message, role) => {
   try {
-    const response = await fetch("/chat", {
+    const response = await fetch(`${API_URL}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -9,7 +11,7 @@ export const fetchChatResponse = async (message, role) => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch response from server.");
+      throw new Error(`Error: ${response.statusText}`);
     }
 
     const data = await response.json();
