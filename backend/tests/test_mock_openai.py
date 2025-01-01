@@ -31,7 +31,7 @@ def mock_openai_response(prompt):
     return {"choices": [{"text": f"Mock response for: {prompt}"}]}
 
 
-@patch("openai.Completion.create")
+@patch("openai.resources.Completions.create")
 def test_mock_openai_response_with_testcontainers(mock_create, test_client_with_mock_openai):
     """Test the /chat endpoint with mocked OpenAI responses and Testcontainers."""
     mock_create.side_effect = lambda **kwargs: mock_openai_response(kwargs["prompt"])
