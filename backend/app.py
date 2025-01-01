@@ -3,9 +3,6 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import openai
-from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -22,6 +19,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 # OpenAI API Key
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Database model for chat history
 class ChatHistory(db.Model):
@@ -59,14 +57,16 @@ def chat():
     try:
         # Construct the OpenAI API request
         prompt = role_prompts.get(role, "You are a helpful assistant.")
-        completion = client.chat.completions.create(model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": user_message},
-        ],
-        max_tokens=150,
-        temperature=0.7)
-        ai_response = completion.choices[0].message.content.strip()
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": user_message},
+            ],
+            max_tokens=150,
+            temperature=0.7,
+        )
+        ai_response = completion.choices[0].message["content"].strip()
 
         # Save the interaction to the database
         chat = ChatHistory(user_message=user_message, ai_response=ai_response, role=role)
@@ -74,13 +74,13 @@ def chat():
         db.session.commit()
 
         return jsonify({"response": ai_response})
-    except openai.InvalidRequestError as e:
+    except openai.error.InvalidRequestError as e:
         print(f"OpenAI API InvalidRequestError: {str(e)}")
         return jsonify({"error": f"OpenAI API error: {str(e)}"}), 400
-    except openai.AuthenticationError as e:
+    except openai.error.AuthenticationError as e:
         print(f"OpenAI API AuthenticationError: {str(e)}")
         return jsonify({"error": "Invalid OpenAI API key."}), 401
-    except openai.OpenAIError as e:
+    except openai.error.OpenAIError as e:
         print(f"OpenAI API Error: {str(e)}")
         return jsonify({"error": f"OpenAI API error: {str(e)}"}), 500
     except Exception as e:
