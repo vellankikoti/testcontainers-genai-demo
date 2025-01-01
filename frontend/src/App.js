@@ -7,11 +7,11 @@ import { fetchChatResponse } from "./services/api";
 function App() {
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState("");
-  const [perspective, setPerspective] = useState("");
+  const [perspective, setPerspective] = useState("Normal");
   const [error, setError] = useState("");
   const [messages, setMessages] = useState([]);
 
-  const handleResponse = async (role) => {
+  const handleResponse = async (role = "Normal") => {
     if (!question.trim()) {
       setError("Please type a question first!");
       return;
@@ -27,10 +27,11 @@ function App() {
         { user: question, ai: res, role },
       ]);
     } catch (err) {
+      console.error("Error fetching response:", err);
       setError(err.message || "An unexpected error occurred.");
       setResponse("");
     }
-    setQuestion("");
+    setQuestion(""); // Reset question input after processing
   };
 
   return (
@@ -40,28 +41,49 @@ function App() {
         <ChatBox
           question={question}
           setQuestion={setQuestion}
-          response={response}
           error={error}
           onSendMessage={() => handleResponse("Normal")}
         />
+        {error && <p className="error-message">{error}</p>}
+        {response && (
+          <div className="response-container">
+            <strong>Response:</strong>
+            <p>{response}</p>
+          </div>
+        )}
         <div className="chat-buttons">
-          <button className="chat-button manager" onClick={() => handleResponse("Manager")}>
+          <button
+            className="chat-button manager"
+            onClick={() => handleResponse("Manager")}
+          >
             Manager
             <span className="button-label">If you're a Manager</span>
           </button>
-          <button className="chat-button developer" onClick={() => handleResponse("Developer")}>
+          <button
+            className="chat-button developer"
+            onClick={() => handleResponse("Developer")}
+          >
             Developer
             <span className="button-label">If you're a Developer</span>
           </button>
-          <button className="chat-button qa" onClick={() => handleResponse("QA")}>
+          <button
+            className="chat-button qa"
+            onClick={() => handleResponse("QA")}
+          >
             QA
             <span className="button-label">If you're a QA (Manual / Automation)</span>
           </button>
-          <button className="chat-button devops" onClick={() => handleResponse("DevOps")}>
+          <button
+            className="chat-button devops"
+            onClick={() => handleResponse("DevOps")}
+          >
             DevOps
             <span className="button-label">If you're a DevOps Engineer</span>
           </button>
-          <button className="chat-button funny" onClick={() => handleResponse("Funny")}>
+          <button
+            className="chat-button funny"
+            onClick={() => handleResponse("Funny")}
+          >
             Fun!!
             <span className="button-label">If you're funny</span>
           </button>
