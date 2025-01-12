@@ -250,19 +250,41 @@ def test_chat_with_mocked_openai():
 $ pytest backend/tests
 ```
 
+### 4. Troubleshooting
+If you encounter issues, check the following:
+
+#### a. Verify Running Containers
+Ensure all services are running:
+```bash
+docker ps
+```
+
+#### b. Check Backend Logs
+Inspect the backend logs for errors:
+```bash
+docker logs backend
+```
+
+#### c. Check Frontend Logs
+Inspect the frontend logs:
+```bash
+docker logs frontend
+```
+
+
+#### d. Test Database Connection
+Ensure the PostgreSQL database is accessible:
+```bash
+docker exec -it postgres-db psql -U testuser -d testdb
+```
+
+Run the following SQL commands to verify database connectivity:
+```sql
+\dt   -- List all tables
+SELECT * FROM ChatHistory; -- View chat history data
+```
+
+If the `ChatHistory` table doesn't exist, ensure the database initialization script (`db-init/init.sql`) is correctly mounted and executed during PostgreSQL container startup.
+
 ---
 
-## Contributing
-Contributions are welcome! Please fork the repository and create a pull request.
-
----
-
-## License
-This project is licensed under the MIT License.
-
----
-
-## Resources
-- [OpenAI API Documentation](https://platform.openai.com/docs/)
-- [Testcontainers Python](https://testcontainers-python.readthedocs.io/)
-- [React Documentation](https://reactjs.org/docs/getting-started.html)
