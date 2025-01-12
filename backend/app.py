@@ -2,7 +2,9 @@ import os
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import openai
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -19,7 +21,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 # OpenAI API Key
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Database model for chat history
 class ChatHistory(db.Model):
@@ -62,12 +63,10 @@ def chat():
             {"role": "user", "content": user_message}
         ]
 
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use gpt-3.5-turbo or gpt-4 as needed
-            messages=messages,
-            max_tokens=150,
-            temperature=0.7,
-        )
+        response = client.chat.completions.create(model="gpt-3.5-turbo",  # Use gpt-3.5-turbo or gpt-4 as needed
+        messages=messages,
+        max_tokens=150,
+        temperature=0.7)
 
         ai_response = response.choices[0].message.content.strip()
 
