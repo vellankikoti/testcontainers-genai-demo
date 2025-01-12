@@ -63,13 +63,13 @@ def chat():
         ]
 
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Updated to use the recommended model
+            model="gpt-3.5-turbo",  # Use gpt-3.5-turbo or gpt-4 as needed
             messages=messages,
             max_tokens=150,
             temperature=0.7,
         )
 
-        ai_response = response["choices"][0]["message"]["content"].strip()
+        ai_response = response.choices[0].message.content.strip()
 
         # Save to database
         chat = ChatHistory(user_message=user_message, ai_response=ai_response, role=role)
