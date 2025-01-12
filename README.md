@@ -288,3 +288,32 @@ If the `ChatHistory` table doesn't exist, ensure the database initialization scr
 
 ---
 
+## Contributing
+Contributions are welcome! Here’s how you can get involved:
+
+1. **Fork the Repository**: Click the "Fork" button on the top right of the repository page.
+2. **Clone Your Fork**:
+   ```bash
+   git clone https://github.com/vellankikoti/testcontainers-genai-demo.git
+   ```
+3. **Create a New Branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+4. **Make Your Changes**: Add or update the codebase, ensuring it aligns with the project’s structure and standards.
+5. **Test Your Changes**:
+   - Run backend and frontend tests to ensure no regressions.
+   - Validate that all components work as expected.
+6. **Commit Your Changes**:
+   ```bash
+   git add .
+   git commit -m "Add your descriptive commit message here"
+   ```
+7. **Push Your Changes**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+8. **Create a Pull Request**: Open a pull request to the `main` branch of the repository, describing your changes in detail.
+
+---
+
