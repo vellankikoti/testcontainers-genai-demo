@@ -13,7 +13,7 @@ body {
 /* Main app container */
 .app {
   width: 100%;
-  max-width: 700px; /* Increased width for larger layout */
+  max-width: 700px;
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -138,11 +138,11 @@ body {
 
 /* Movie Buff Styling */
 .movie-buff {
-  background-color: #ff6347; /* Highly visible orange-red for Movie Buff */
+  background-color: #d35400; /* Bright orange for visibility */
 }
 
 .movie-buff:hover {
-  background-color: #e5533c;
+  background-color: #a84300;
 }
 
 /* Message list styling */
