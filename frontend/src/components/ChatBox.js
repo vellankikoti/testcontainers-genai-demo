@@ -2,18 +2,18 @@ import React from "react";
 
 /**
  * ChatBox Component
- * Renders an input box for user queries and a send button to submit the message.
+ * Handles user input and submission via Enter key or external button clicks.
  *
  * Props:
- * - question: Current value of the input field.
- * - setQuestion: Function to update the input field value.
- * - onSendMessage: Function to handle the message submission.
- * - error: Error message to display if validation fails.
+ * - question: Current question input.
+ * - setQuestion: Updates the question state in the parent component.
+ * - onSendMessage: Function to handle message submission (triggered on Enter key press).
+ * - error: Error message to display, if any.
  */
 function ChatBox({ question, setQuestion, onSendMessage, error }) {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      onSendMessage();
+      onSendMessage("Normal"); // Automatically fetch Normal response on Enter
     }
   };
 
@@ -25,11 +25,8 @@ function ChatBox({ question, setQuestion, onSendMessage, error }) {
         placeholder="Type your question here..."
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
-        onKeyDown={handleKeyDown} // Allow Enter key to submit
+        onKeyDown={handleKeyDown} // Trigger on Enter key press
       />
-      <button className="send-button" onClick={onSendMessage}>
-        Send
-      </button>
       {error && <p className="error-message">{error}</p>}
     </div>
   );
