@@ -1,69 +1,81 @@
 import React, { useState } from "react";
 import "./App.css";
+import ChatBox from "./components/ChatBox";
+import MessageList from "./components/MessageList";
+import { fetchChatResponse } from "./services/api";
 
 function App() {
   const [question, setQuestion] = useState("");
-  const [response, setResponse] = useState("");
-  const [perspective, setPerspective] = useState("");
+  const [error, setError] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [lastQuestion, setLastQuestion] = useState("");
 
-  const handleResponse = (role) => {
-    if (!question.trim()) {
-      alert("Please type a question first!");
+  /**
+   * Handles fetching responses based on role.
+   * If the question changes, it resets to fetch only the "Normal" response first.
+   * @param {string} role - The role perspective for the AI response.
+   */
+  const handleResponse = async (role) => {
+    // Validate question input for the "Normal" role
+    if (!question.trim() && role === "Normal") {
+      setError("Please type a question first!");
       return;
     }
+    setError("");
 
-    // Mock responses based on role
-    const responses = {
-      Manager: `As a Manager, I think "${question}" requires leadership insights!`,
-      Developer: `As a Developer: Here's some pseudocode for "${question}"...`,
-      QA: `As QA, I’d say: "${question}" needs thorough testing.`,
-      DevOps: `As a DevOps Engineer: "${question}" will be deployed seamlessly.`,
-      Funny: `Haha! "${question}" reminds me of a joke.`,
-    };
+    // Use the last question for role-based responses
+    const query = role === "Normal" ? question.trim() : lastQuestion;
 
-    setPerspective(role);
-    setResponse(responses[role]);
+    try {
+      const response = await fetchChatResponse(query, role);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { user: query, ai: response, role },
+      ]);
+    } catch (err) {
+      console.error("Error fetching response:", err);
+      setError("Failed to fetch response. Please try again.");
+    }
+
+    // Save the question when fetching the "Normal" response
+    if (role === "Normal") {
+      setLastQuestion(question.trim());
+      setQuestion(""); // Clear input field after submission
+    }
   };
 
   return (
     <div className="app">
-      <div className="chat-container">
-        <h1 className="chat-title">What's your Question?</h1>
-        <input
-          type="text"
-          className="chat-input"
-          placeholder="Type your question here..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+      <header className="app-header">
+        <h1 className="chat-title">Testcontainers GenAI Demo</h1>
+        <p className="chat-description">
+          Type a question and get role-specific responses!
+        </p>
+      </header>
+
+      <main className="chat-container">
+        <ChatBox
+          question={question}
+          setQuestion={setQuestion}
+          onSendMessage={() => handleResponse("Normal")} // Trigger Normal response on Enter
+          error={error}
         />
-        {response && (
-          <div className="chat-response">
-            <p><strong>{perspective}:</strong> {response}</p>
-          </div>
-        )}
+
         <div className="chat-buttons">
-          <button className="chat-button manager" onClick={() => handleResponse("Manager")}>
-            Manager
-            <span className="button-label">If you're a Manager</span>
-          </button>
-          <button className="chat-button developer" onClick={() => handleResponse("Developer")}>
-            Developer
-            <span className="button-label">If you're a Developer</span>
-          </button>
-          <button className="chat-button qa" onClick={() => handleResponse("QA")}>
-            QA
-            <span className="button-label">If you're a QA (Manual / Automation)</span>
-          </button>
-          <button className="chat-button devops" onClick={() => handleResponse("DevOps")}>
-            DevOps
-            <span className="button-label">If you're a DevOps Engineer</span>
-          </button>
-          <button className="chat-button funny" onClick={() => handleResponse("Funny")}>
-            Fun!!
-            <span className="button-label">If you're funny</span>
-          </button>
+          {["Manager", "Developer", "QA", "DevOps", "Movie Buff"].map((role) => (
+            <button
+              key={role}
+              className={`chat-button ${role.toLowerCase().replace(" ", "-")}`} // Dynamically generate class name
+              onClick={() => handleResponse(role)}
+              disabled={!lastQuestion} // Disable buttons until a question is submitted
+            >
+              {role}
+            </button>
+          ))}
         </div>
-      </div>
+
+        <MessageList messages={messages} />
+      </main>
     </div>
   );
 }

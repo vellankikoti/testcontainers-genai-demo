@@ -2,64 +2,89 @@ import os
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import openai
+from openai import OpenAI  # Left unchanged as per your requirement
 from dotenv import load_dotenv
+
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-    "DATABASE_URL", "postgresql://testuser:testpass@db:5432/testdb"
+    "DATABASE_URL", "postgresql://testuser:testpass@postgres-db:5432/testdb"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-# OpenAI API Key
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 # Database model for chat history
 class ChatHistory(db.Model):
+    __tablename__ = "chat_history"  # Explicitly name the table
     id = db.Column(db.Integer, primary_key=True)
     user_message = db.Column(db.Text, nullable=False)
     ai_response = db.Column(db.Text, nullable=False)
     role = db.Column(db.String(50), nullable=False)
 
-# Ensure tables are created
 @app.before_first_request
 def create_tables():
-    db.create_all()
+    """
+    Create database tables before the first request.
+    """
+    try:
+        db.create_all()  # Ensure tables are created
+        app.logger.info("Database tables created successfully.")
+    except Exception as e:
+        app.logger.error(f"Error creating tables: {str(e)}")
+
+# Root route for health check
+@app.route("/", methods=["GET"])
+def root():
+    """
+    Root endpoint to verify backend is running.
+    """
+    return jsonify({"message": "Backend is working!"}), 200
 
 # Role-specific prompts
 role_prompts = {
-    "Manager": "Respond as a strategic Manager.",
-    "Developer": "Respond as a Developer with code examples.",
-    "QA": "Respond as a QA Tester with detailed test cases.",
-    "DevOps": "Respond as a DevOps Engineer with deployment advice.",
-    "Funny": "Respond humorously with jokes or sarcasm.",
+    "Manager": "You are a Manager. Provide strategic advice. Your answer should come from a proper manager who has 20 years of experience and who is superbly talented and expert in simplifying the stuff",
+    "Developer": "You are a Developer. whatever you think talk, everything related to code and programming concepts related. Provide technical insights and code examples.",
+    "QA": "You are a QA Tester. You always try to find bugs and create a jira ticket for bugs to Developers, DevOps Engineers so be ready as a superbly talented QA tester, Provide detailed test cases.",
+    "DevOps": "You are a DevOps Engineer. You are expert in Git, GitHub, jenkins, Docker, Kubernetes, TestContainers, ArgoCd, AWS, Azure, Prometheus, Grafana. Whatever you speak, speak like a seasoned DevOps Engineer, who loves to simplify things with real time examples, which are funny, easy to understand and easy to remember for lifetime. Provide deployment advice.",
+    "Movie Buff": "You are a movie buff, who have humungous movie knowledge. Especially Telugu, Hindi, Kannada, Tami movies. Respond with movie reference which is blcokbuster movie or recent movie.",
+    "Normal": "You are a helpful assistant. Provide straightforward advice.",
 }
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    """
+    Handle user messages and generate AI responses based on the role.
+    """
     data = request.json
-    user_message = data.get("message", "")
+    user_message = data.get("message", "").strip()
     role = data.get("role", "Normal")
 
     if not user_message:
         return jsonify({"error": "Message is required"}), 400
 
-    # Generate response from OpenAI
-    prompt = f"{role_prompts.get(role, '')}\nUser: {user_message}\nAI:"
     try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
-            max_tokens=150,
+        prompt = role_prompts.get(role, "You are a helpful assistant.")
+        messages = [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": user_message}
+        ]
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",  # Left unchanged as per your requirement
+            messages=messages,
+            max_tokens=300,
+            temperature=0.7
         )
-        ai_response = response.choices[0].text.strip()
+
+        ai_response = response.choices[0].message.content.strip()
 
         # Save to database
         chat = ChatHistory(user_message=user_message, ai_response=ai_response, role=role)
@@ -68,17 +93,35 @@ def chat():
 
         return jsonify({"response": ai_response})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @app.route("/history", methods=["GET"])
 def get_history():
-    """Retrieve chat history."""
-    chats = ChatHistory.query.all()
-    return jsonify(
-        [{"id": chat.id, "user": chat.user_message, "ai": chat.ai_response, "role": chat.role} for chat in chats]
-    )
-
+    """
+    Retrieve the chat history from the database.
+    """
+    try:
+        chats = ChatHistory.query.all()
+        history = [
+            {
+                "id": chat.id,
+                "user_message": chat.user_message,
+                "ai_response": chat.ai_response,
+                "role": chat.role,
+            }
+            for chat in chats
+        ]
+        return jsonify(history)
+    except Exception as e:
+        app.logger.error(f"Error fetching chat history: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
+    # Ensure tables are created before starting the app
+    with app.app_context():
+        try:
+            db.create_all()
+            app.logger.info("Database tables created successfully on startup.")
+        except Exception as e:
+            app.logger.error(f"Error creating tables on startup: {str(e)}")
     app.run(host="0.0.0.0", port=5000)

@@ -1,94 +1,180 @@
+/* General body styling */
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-  }
-  
-  .app {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f9f9f9;
-  }
-  
-  .chat-container {
-    width: 400px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-  }
-  
-  .chat-title {
-    font-size: 24px;
-    color: #1a73e8;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .chat-input {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    margin-bottom: 20px;
-  }
-  
-  .chat-response {
-    margin: 20px 0;
-    padding: 15px;
-    background-color: #f1f1f1;
-    border-radius: 4px;
-    font-size: 16px;
-    color: #333;
-  }
-  
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background-color: #f0f4f8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* Main app container */
+.app {
+  width: 100%;
+  max-width: 700px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header styling */
+.app-header {
+  text-align: center;
+}
+
+.chat-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1a73e8;
+  margin: 0;
+}
+
+.chat-description {
+  font-size: 14px;
+  color: #666;
+  margin: 5px 0 0 0;
+}
+
+/* Chat input styling */
+.chat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Increased gap for better spacing */
+  margin-bottom: 20px; /* Adds space between input and buttons */
+}
+
+.chat-input {
+  width: 100%;
+  height: 50px; /* Increased height for a larger input box */
+  padding: 12px;
+  font-size: 18px; /* Larger font size */
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 5px rgba(26, 115, 232, 0.5);
+}
+
+/* Error message styling */
+.error-message {
+  color: #d9534f;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 5px;
+}
+
+/* Role buttons container */
+.chat-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px; /* Adds spacing between buttons */
+  justify-content: space-between;
+}
+
+/* General button styling */
+.chat-button {
+  flex: 1;
+  min-width: calc(50% - 10px);
+  padding: 12px;
+  font-size: 16px; /* Larger button font size */
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+/* Button hover effect */
+.chat-button:hover {
+  transform: scale(1.05);
+}
+
+/* Role-specific button colors */
+.manager {
+  background-color: #007bff;
+}
+
+.manager:hover {
+  background-color: #0056b3;
+}
+
+.developer {
+  background-color: #28a745;
+}
+
+.developer:hover {
+  background-color: #1e7a38;
+}
+
+.qa {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.qa:hover {
+  background-color: #e0a800;
+}
+
+.devops {
+  background-color: #17a2b8;
+}
+
+.devops:hover {
+  background-color: #117a8b;
+}
+
+/* Movie Buff Styling */
+.movie-buff {
+  background-color: #d35400; /* Bright orange for visibility */
+}
+
+.movie-buff:hover {
+  background-color: #a84300;
+}
+
+/* Message list styling */
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message-item {
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #f8f9fa;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.message-item p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.message-item strong {
+  color: #333;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 480px) {
   .chat-buttons {
-    display: flex;
     flex-direction: column;
-    gap: 10px;
   }
-  
+
   .chat-button {
-    position: relative;
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    min-width: 100%;
   }
-  
-  .manager {
-    background-color: #007bff;
-  }
-  
-  .developer {
-    background-color: #28a745;
-  }
-  
-  .qa {
-    background-color: #ffc107;
-    color: #212529;
-  }
-  
-  .devops {
-    background-color: #17a2b8;
-  }
-  
-  .funny {
-    background-color: #dc3545;
-  }
-  
-  .button-label {
-    display: block;
-    font-size: 12px;
-    color: #ffffff;
-    opacity: 0.8;
-    margin-top: 5px;
-    font-weight: normal;
-  }
-  
+}
