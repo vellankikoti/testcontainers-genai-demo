@@ -40,6 +40,14 @@ def create_tables():
     except Exception as e:
         app.logger.error(f"Error creating tables: {str(e)}")
 
+# Root route for health check
+@app.route("/", methods=["GET"])
+def root():
+    """
+    Root endpoint to verify backend is running.
+    """
+    return jsonify({"message": "Backend is working!"}), 200
+
 # Role-specific prompts
 role_prompts = {
     "Manager": "You are a Manager. Provide strategic advice.",
