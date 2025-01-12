@@ -16,14 +16,14 @@ function App() {
    * @param {string} role - The role perspective for the AI response.
    */
   const handleResponse = async (role) => {
-    // Validate question input
+    // Validate question input for the "Normal" role
     if (!question.trim() && role === "Normal") {
       setError("Please type a question first!");
       return;
     }
     setError("");
 
-    // Use the last question for role changes if no new question is submitted
+    // Use the last question for role-based responses
     const query = role === "Normal" ? question.trim() : lastQuestion;
 
     try {
@@ -34,13 +34,13 @@ function App() {
       ]);
     } catch (err) {
       console.error("Error fetching response:", err);
-      setError("An unexpected error occurred. Please try again.");
+      setError("Failed to fetch response. Please try again.");
     }
 
-    // Save the question when fetching "Normal" response
+    // Save the question when fetching the "Normal" response
     if (role === "Normal") {
       setLastQuestion(question.trim());
-      setQuestion(""); // Clear input field
+      setQuestion(""); // Clear input field after submission
     }
   };
 
@@ -57,7 +57,7 @@ function App() {
         <ChatBox
           question={question}
           setQuestion={setQuestion}
-          onSendMessage={() => handleResponse("Normal")} // Default to Normal on Enter
+          onSendMessage={() => handleResponse("Normal")} // Trigger Normal response on Enter
           error={error}
         />
 
@@ -65,9 +65,9 @@ function App() {
           {["Manager", "Developer", "QA", "DevOps", "Movie Buff"].map((role) => (
             <button
               key={role}
-              className={`chat-button ${role.toLowerCase()}`}
+              className={`chat-button ${role.toLowerCase().replace(" ", "-")}`} // Dynamically generate class name
               onClick={() => handleResponse(role)}
-              disabled={!lastQuestion} // Disable role buttons until a question is submitted
+              disabled={!lastQuestion} // Disable buttons until a question is submitted
             >
               {role}
             </button>
