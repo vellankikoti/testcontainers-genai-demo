@@ -1,13 +1,9 @@
 /**
  * API Service
- * Handles interactions with the backend server for the Testcontainers GenAI Demo application.
+ * Handles interactions with the backend server.
  */
 
-const API_URL =
-  process.env.REACT_APP_API_BASE_URL ||
-  (window.location.hostname === "localhost"
-    ? "http://localhost:5000"
-    : "http://backend:5000");
+const API_URL = "/api";
 
 /**
  * Fetches a chat response from the backend for a given question and role.
@@ -15,7 +11,6 @@ const API_URL =
  * @param {string} message - The user's question.
  * @param {string} role - The role perspective for the AI response.
  * @returns {Promise<string>} The AI-generated response.
- * @throws Will throw an error if the fetch request fails.
  */
 export const fetchChatResponse = async (message, role) => {
   try {
@@ -43,7 +38,6 @@ export const fetchChatResponse = async (message, role) => {
  * Fetches the chat history from the backend.
  * 
  * @returns {Promise<Array>} Array of chat history objects.
- * @throws Will throw an error if the fetch request fails.
  */
 export const fetchChatHistory = async () => {
   try {
