@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-
 host="$1"
 shift
 cmd="$@"

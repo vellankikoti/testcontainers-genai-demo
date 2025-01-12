@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - ./db-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "testuser", "-d", "testdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -21,7 +26,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       DATABASE_URL: "postgresql+psycopg2://testuser:testpass@postgres-db:5432/testdb"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: >
       sh -c "chmod +x /app/wait-for-it.sh &&
       /app/wait-for-it.sh -t 60 postgres-db:5432 -- python app.py"
