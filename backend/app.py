@@ -45,6 +45,9 @@ role_prompts = {
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    """
+    Handle user messages and generate AI responses based on the role.
+    """
     data = request.json
     user_message = data.get("message", "").strip()
     role = data.get("role", "Normal")
@@ -54,13 +57,19 @@ def chat():
 
     try:
         prompt = role_prompts.get(role, "You are a helpful assistant.")
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=f"{prompt}\nUser: {user_message}\nAI:",
+        messages = [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": user_message}
+        ]
+
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Updated to use the recommended model
+            messages=messages,
             max_tokens=150,
             temperature=0.7,
         )
-        ai_response = response["choices"][0]["text"].strip()
+
+        ai_response = response["choices"][0]["message"]["content"].strip()
 
         # Save to database
         chat = ChatHistory(user_message=user_message, ai_response=ai_response, role=role)
@@ -73,6 +82,9 @@ def chat():
 
 @app.route("/history", methods=["GET"])
 def get_history():
+    """
+    Retrieve the chat history from the database.
+    """
     try:
         chats = ChatHistory.query.all()
         return jsonify(
