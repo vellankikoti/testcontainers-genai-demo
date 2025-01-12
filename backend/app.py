@@ -2,10 +2,11 @@ import os
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+from openai import OpenAI  # Left unchanged as per your requirement
 from dotenv import load_dotenv
+
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Load environment variables
 load_dotenv()
@@ -20,10 +21,9 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-# OpenAI API Key
-
 # Database model for chat history
 class ChatHistory(db.Model):
+    __tablename__ = "chat_history"  # Explicitly name the table
     id = db.Column(db.Integer, primary_key=True)
     user_message = db.Column(db.Text, nullable=False)
     ai_response = db.Column(db.Text, nullable=False)
@@ -31,8 +31,14 @@ class ChatHistory(db.Model):
 
 @app.before_first_request
 def create_tables():
-    """Create database tables before the first request."""
-    db.create_all()
+    """
+    Create database tables before the first request.
+    """
+    try:
+        db.create_all()  # Ensure tables are created
+        app.logger.info("Database tables created successfully.")
+    except Exception as e:
+        app.logger.error(f"Error creating tables: {str(e)}")
 
 # Role-specific prompts
 role_prompts = {
@@ -63,10 +69,12 @@ def chat():
             {"role": "user", "content": user_message}
         ]
 
-        response = client.chat.completions.create(model="gpt-3.5-turbo",  # Use gpt-3.5-turbo or gpt-4 as needed
-        messages=messages,
-        max_tokens=150,
-        temperature=0.7)
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",  # Left unchanged as per your requirement
+            messages=messages,
+            max_tokens=150,
+            temperature=0.7
+        )
 
         ai_response = response.choices[0].message.content.strip()
 
@@ -77,7 +85,7 @@ def chat():
 
         return jsonify({"response": ai_response})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 @app.route("/history", methods=["GET"])
 def get_history():
@@ -86,14 +94,26 @@ def get_history():
     """
     try:
         chats = ChatHistory.query.all()
-        return jsonify(
-            [
-                {"id": chat.id, "user_message": chat.user_message, "ai_response": chat.ai_response, "role": chat.role}
-                for chat in chats
-            ]
-        )
+        history = [
+            {
+                "id": chat.id,
+                "user_message": chat.user_message,
+                "ai_response": chat.ai_response,
+                "role": chat.role,
+            }
+            for chat in chats
+        ]
+        return jsonify(history)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error fetching chat history: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
+    # Ensure tables are created before starting the app
+    with app.app_context():
+        try:
+            db.create_all()
+            app.logger.info("Database tables created successfully on startup.")
+        except Exception as e:
+            app.logger.error(f"Error creating tables on startup: {str(e)}")
     app.run(host="0.0.0.0", port=5000)
