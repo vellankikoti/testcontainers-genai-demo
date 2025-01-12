@@ -3,7 +3,8 @@
  * Handles interactions with the backend server.
  */
 
-const API_URL = "/api";
+// Dynamically resolve the API URL
+const API_URL = process.env.REACT_APP_API_BASE_URL || "/api";
 
 /**
  * Fetches a chat response from the backend for a given question and role.
@@ -23,13 +24,15 @@ export const fetchChatResponse = async (message, role) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch chat response: ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch chat response: ${response.status} ${response.statusText}`
+      );
     }
 
     const data = await response.json();
     return data.response;
   } catch (error) {
-    console.error(`[ERROR] fetchChatResponse:`, error);
+    console.error(`[ERROR] fetchChatResponse:`, error.message || error);
     throw error;
   }
 };
@@ -49,13 +52,40 @@ export const fetchChatHistory = async () => {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch chat history: ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch chat history: ${response.status} ${response.statusText}`
+      );
     }
 
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error(`[ERROR] fetchChatHistory:`, error);
+    console.error(`[ERROR] fetchChatHistory:`, error.message || error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches the API root status to verify backend availability.
+ * 
+ * @returns {Promise<string>} The status message from the backend.
+ */
+export const fetchApiStatus = async () => {
+  try {
+    const response = await fetch(`${API_URL}/`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch API status: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+    return data.message;
+  } catch (error) {
+    console.error(`[ERROR] fetchApiStatus:`, error.message || error);
     throw error;
   }
 };
