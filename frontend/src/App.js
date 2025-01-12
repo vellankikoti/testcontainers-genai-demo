@@ -8,38 +8,39 @@ function App() {
   const [question, setQuestion] = useState("");
   const [error, setError] = useState("");
   const [messages, setMessages] = useState([]);
-
-  // List of roles for dynamic button rendering
-  const roles = [
-    { name: "Manager", description: "If you're a Manager" },
-    { name: "Developer", description: "If you're a Developer" },
-    { name: "QA", description: "If you're a QA (Manual / Automation)" },
-    { name: "DevOps", description: "If you're a DevOps Engineer" },
-    { name: "Funny", description: "If you're funny" },
-  ];
+  const [lastQuestion, setLastQuestion] = useState("");
 
   /**
-   * Handle response generation for a given role.
-   * @param {string} role - The role for which to fetch the response.
+   * Handles fetching responses based on role.
+   * If the question changes, it resets to fetch only the "Normal" response first.
+   * @param {string} role - The role perspective for the AI response.
    */
   const handleResponse = async (role) => {
-    if (!question.trim()) {
+    // Validate question input
+    if (!question.trim() && role === "Normal") {
       setError("Please type a question first!");
       return;
     }
-
     setError("");
+
+    // Use the last question for role changes if no new question is submitted
+    const query = role === "Normal" ? question.trim() : lastQuestion;
+
     try {
-      const response = await fetchChatResponse(question, role);
+      const response = await fetchChatResponse(query, role);
       setMessages((prevMessages) => [
         ...prevMessages,
-        { user: question, ai: response, role },
+        { user: query, ai: response, role },
       ]);
     } catch (err) {
       console.error("Error fetching response:", err);
       setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setQuestion(""); // Clear the input after the request
+    }
+
+    // Save the question when fetching "Normal" response
+    if (role === "Normal") {
+      setLastQuestion(question.trim());
+      setQuestion(""); // Clear input field
     }
   };
 
@@ -48,7 +49,7 @@ function App() {
       <header className="app-header">
         <h1 className="chat-title">Testcontainers GenAI Demo</h1>
         <p className="chat-description">
-          Ask a question and see how different personas respond.
+          Type a question and get role-specific responses!
         </p>
       </header>
 
@@ -56,19 +57,19 @@ function App() {
         <ChatBox
           question={question}
           setQuestion={setQuestion}
+          onSendMessage={() => handleResponse("Normal")} // Default to Normal on Enter
           error={error}
-          onSendMessage={() => handleResponse("Normal")}
         />
 
         <div className="chat-buttons">
-          {roles.map(({ name, description }) => (
+          {["Manager", "Developer", "QA", "DevOps", "Movie Buff"].map((role) => (
             <button
-              key={name}
-              className={`chat-button ${name.toLowerCase()}`}
-              onClick={() => handleResponse(name)}
+              key={role}
+              className={`chat-button ${role.toLowerCase()}`}
+              onClick={() => handleResponse(role)}
+              disabled={!lastQuestion} // Disable role buttons until a question is submitted
             >
-              {name}
-              <span className="button-label">{description}</span>
+              {role}
             </button>
           ))}
         </div>
